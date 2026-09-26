@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Scattering boundary conditions</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+
+
+
+<style type="text/css">
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+}
+.hanging div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Scattering boundary conditions</h1>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction" id="toc-introduction"><span class="toc-section-number">1</span> Introduction</a></li>
+<li><a href="#shared-interface-notation" id="toc-shared-interface-notation"><span class="toc-section-number">2</span> Shared interface notation</a></li>
+<li><a href="#simple-boundaries" id="toc-simple-boundaries"><span class="toc-section-number">3</span> Simple boundaries</a>
+<ul>
+<li><a href="#fixed-rigid" id="toc-fixed-rigid"><span class="toc-section-number">3.1</span> Fixed rigid</a></li>
+<li><a href="#pressure-release" id="toc-pressure-release"><span class="toc-section-number">3.2</span> Pressure release</a></li>
+<li><a href="#fluid-filled" id="toc-fluid-filled"><span class="toc-section-number">3.3</span> Fluid-filled</a></li>
+</ul></li>
+<li><a href="#acoustic-shelled-boundaries" id="toc-acoustic-shelled-boundaries"><span class="toc-section-number">4</span> Acoustic shelled boundaries</a>
+<ul>
+<li><a href="#pressure-release-interior" id="toc-pressure-release-interior"><span class="toc-section-number">4.1</span> Pressure release interior</a></li>
+<li><a href="#fluid-filled-interior" id="toc-fluid-filled-interior"><span class="toc-section-number">4.2</span> Fluid-filled interior</a></li>
+</ul></li>
+<li><a href="#elastic-shelled-boundaries" id="toc-elastic-shelled-boundaries"><span class="toc-section-number">5</span> Elastic shelled boundaries</a>
+<ul>
+<li><a href="#elastic-shell-boundary" id="toc-elastic-shell-boundary"><span class="toc-section-number">5.1</span> Elastic shell boundary</a></li>
+</ul></li>
+<li><a href="#viscous-interfaces" id="toc-viscous-interfaces"><span class="toc-section-number">6</span> Viscous interfaces</a></li>
+<li><a href="#circumferential-waves-and-resonance-families" id="toc-circumferential-waves-and-resonance-families"><span class="toc-section-number">7</span> Circumferential waves and resonance
+families</a></li>
+<li><a href="#weak-fluid-like" id="toc-weak-fluid-like"><span class="toc-section-number">8</span> Weak, fluid-like</a></li>
+<li><a href="#bibliography" id="toc-bibliography">References</a></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Introduction</h1>
+<p>Boundary conditions turn the governing wave equations into a
+particular scattering problem. They state whether an interface can
+sustain pressure, whether it can move, and which field quantities pass
+continuously between adjacent media. A fixed-rigid surface, a
+pressure-release surface, and a penetrable fluid target can therefore
+scatter very differently even when they have the same geometry.</p>
+<p>The conditions must act on the <strong>total</strong> field at an
+exterior boundary. The incident and scattered fields are separated to
+solve the exterior problem, but neither field generally satisfies the
+boundary condition alone <span class="citation">(<a href="#ref-Colton_2013">Colton and Kress 2013</a>)</span>.</p>
+<div class="note" data-title="Notation">
+<p>See <a href="https://brandynlucca.github.io/acousticTS/articles/notation-and-symbols/notation-and-symbols.html">Notation
+and Symbols</a> and the <a href="https://brandynlucca.github.io/acousticTS/articles/acoustic-scattering-primer/acoustic-scattering-primer.html">Acoustic
+Scattering Primer</a>.</p>
+</div>
+</div>
+<div id="shared-interface-notation" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Shared interface
+notation</h1>
+<p>Medium <code>1</code> is the exterior fluid. Target regions are
+numbered inward. For an unlayered target, <span class="math inline">\(\Gamma\)</span> denotes the interface between
+media <code>1</code> and <code>2</code>. For a shell with outer radius
+<span class="math inline">\(a\)</span> and inner radius <span class="math inline">\(b\)</span>, the outer and inner interfaces are
+<span class="math inline">\(\Gamma_a\)</span> and <span class="math inline">\(\Gamma_b\)</span>.</p>
+<p>The exterior pressure is decomposed as:</p>
+<p><span class="math display">\[
+  p_1^{\mathrm{tot}}
+  =p_1^{\mathrm{inc}}+p_1^{\mathrm{scat}}.
+\]</span></p>
+<p>At a fluid-fluid interface, <span class="math inline">\(\mathbf{n}\)</span> is one unit normal used on
+both sides of the interface. Its orientation does not change the
+continuity conditions as long as it is used consistently. The normal
+derivative is:</p>
+<p><span class="math display">\[
+  \partial_n p
+  =\frac{\partial p}{\partial n}
+  =\mathbf{n}\mathbin{\cdot}\nabla p.
+\]</span></p>
+<p>With the <span class="math inline">\(e^{-i\omega t}\)</span>
+convention, the linearized momentum equation and its phasor form are
+<span class="citation">(<a href="#ref-Morse_1968">Morse and Ingard
+1968</a>)</span>:</p>
+<p><span class="math display">\[
+  \rho_j\frac{\partial\mathbf{v}_j}{\partial t}
+  =-\nabla p_j,
+  \qquad
+  -i\omega\rho_j\mathbf{v}_j=-\nabla p_j.
+\]</span></p>
+<p>The fluid particle velocity is therefore:</p>
+<p><span class="math display">\[
+  \mathbf{v}_j
+  =\frac{1}{i\omega\rho_j}\nabla p_j,
+  \qquad
+  v_{n,j}
+  =\frac{1}{i\omega\rho_j}\partial_n p_j.
+\]</span></p>
+<p>Each homogeneous fluid pressure satisfies the Helmholtz equation:</p>
+<p><span class="math display">\[
+  \nabla^2p_j+k_j^2p_j=0,
+  \qquad
+  k_j=\frac{\omega}{c_j}.
+\]</span></p>
+<p>The directional density and sound-speed ratios used for adjacent
+media are:</p>
+<p><span class="math display">\[
+  g_{ij}=\frac{\rho_i}{\rho_j},
+  \qquad
+  h_{ij}=\frac{c_i}{c_j}.
+\]</span></p>
+<p>Thus, <span class="math inline">\(g_{21}\)</span> and <span class="math inline">\(h_{21}\)</span> compare the first target region
+with the exterior. For a shelled target, <span class="math inline">\(g_{32}\)</span> and <span class="math inline">\(h_{32}\)</span> compare the core with the
+shell.</p>
+</div>
+<div id="simple-boundaries" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Simple boundaries</h1>
+<div id="fixed-rigid" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> Fixed rigid</h2>
+<p>A fixed-rigid boundary cannot move in its normal direction. The
+normal fluid velocity at the surface must therefore vanish:</p>
+<p><span class="math display">\[
+  v_{n,1}=\mathbf{v}_1\mathbin{\cdot}\mathbf{n}=0
+  \qquad\text{on }\Gamma.
+\]</span></p>
+<p>The same limit can be expressed through the specific surface
+impedance:</p>
+<p><span class="math display">\[
+  Z_s=\frac{p_1^{\mathrm{tot}}}{v_{n,1}},
+  \qquad
+  |Z_s|\longrightarrow\infty.
+\]</span></p>
+<p>Substitution of the phasor momentum relation gives the Neumann
+boundary condition:</p>
+<p><span class="math display">\[
+  \partial_n p_1^{\mathrm{tot}}=0
+  \qquad\text{on }\Gamma.
+\]</span></p>
+<p>In terms of the incident and scattered fields, the prescribed data
+for the scattered field are:</p>
+<p><span class="math display">\[
+  \partial_n p_1^{\mathrm{scat}}
+  =-\partial_n p_1^{\mathrm{inc}}
+  \qquad\text{on }\Gamma.
+\]</span></p>
+<p>The pressure itself need not vanish. Instead, the reflected field
+cancels the incident normal velocity at the surface. In partial-wave
+formulations, the Neumann condition fixes each scattering coefficient by
+excluding any total field that would produce radial surface motion. At
+high frequency, a smooth rigid surface supports a locally specular
+reflection without the pressure phase reversal of a pressure-release
+surface.</p>
+</div>
+<div id="pressure-release" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> Pressure release</h2>
+<p>A pressure-release surface cannot sustain an acoustic pressure
+fluctuation. It is the zero-impedance limit:</p>
+<p><span class="math display">\[
+  Z_s=\frac{p_1^{\mathrm{tot}}}{v_{n,1}},
+  \qquad
+  |Z_s|\longrightarrow0.
+\]</span></p>
+<p>For finite normal velocity, the total pressure obeys the Dirichlet
+condition:</p>
+<p><span class="math display">\[
+  p_1^{\mathrm{tot}}=0
+  \qquad\text{on }\Gamma.
+\]</span></p>
+<p>The corresponding condition on the scattered field is:</p>
+<p><span class="math display">\[
+  p_1^{\mathrm{scat}}=-p_1^{\mathrm{inc}}
+  \qquad\text{on }\Gamma.
+\]</span></p>
+<p>Normal motion is not constrained to vanish. The idealization is
+appropriate when the material on the other side has negligible acoustic
+impedance relative to the exterior fluid, as for an idealized gas
+boundary away from effects that require an explicit interior solution. A
+locally reflected pressure wave undergoes a phase reversal. In a modal
+solution, zero surface pressure replaces the zero-normal-velocity
+condition used for a rigid target.</p>
+</div>
+<div id="fluid-filled" class="section level2" number="3.3">
+<h2><span class="header-section-number">3.3</span> Fluid-filled</h2>
+<p>A penetrable fluid target supports acoustic pressure on both sides of
+its boundary. The exterior total field and interior field satisfy <span class="citation">(<a href="#ref-Anderson_1950">Anderson
+1950</a>)</span>:</p>
+<p><span class="math display">\[
+  \nabla^2p_1^{\mathrm{tot}}+k_1^2p_1^{\mathrm{tot}}=0,
+  \qquad
+  \nabla^2p_2+k_2^2p_2=0.
+\]</span></p>
+<p>An inviscid fluid has Cauchy stress <span class="math inline">\(\boldsymbol{\sigma}_j=-p_j\mathbf{I}\)</span>.
+Continuity of normal traction therefore requires pressure
+continuity:</p>
+<p><span class="math display">\[
+  p_1^{\mathrm{tot}}=p_2
+  \qquad\text{on }\Gamma.
+\]</span></p>
+<p>The interface also admits neither separation nor interpenetration, so
+normal particle velocity is continuous:</p>
+<p><span class="math display">\[
+  \mathbf{v}_1\mathbin{\cdot}\mathbf{n}
+  =\mathbf{v}_2\mathbin{\cdot}\mathbf{n}
+  \qquad\text{on }\Gamma.
+\]</span></p>
+<p>Using the momentum equation gives the derivative form of the second
+transmission condition:</p>
+<p><span class="math display">\[
+  \frac{1}{\rho_1}\partial_n p_1^{\mathrm{tot}}
+  =\frac{1}{\rho_2}\partial_n p_2
+  \qquad\text{on }\Gamma.
+\]</span></p>
+<p>Pressure and normal motion are both generally nonzero. Their
+continuity couples the exterior and interior solutions, while density
+and compressibility contrasts determine the strength and phase of the
+reflected and transmitted fields <span class="citation">(<a href="#ref-Medwin_1998">Medwin and Clay 1998</a>)</span>. Tangential
+velocity need not be continuous across an ideal inviscid fluid-fluid
+interface because neither fluid transmits shear traction.</p>
+</div>
+</div>
+<div id="acoustic-shelled-boundaries" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Acoustic shelled
+boundaries</h1>
+<p><span id="inelastic-shelled-boundaries"></span></p>
+<p>An acoustic shell is a finite fluid layer, not an immobile shell and
+not an elastic solid. Medium <code>2</code> occupies the region between
+<span class="math inline">\(\Gamma_a\)</span> and <span class="math inline">\(\Gamma_b\)</span>. It supports compressional
+pressure waves but no shear stress. The shell field satisfies:</p>
+<p><span class="math display">\[
+  \nabla^2p_2+k_2^2p_2=0
+  \qquad\text{between }\Gamma_a\text{ and }\Gamma_b.
+\]</span></p>
+<p>At the outer interface, pressure and normal velocity are
+continuous:</p>
+<p><span class="math display">\[
+  p_1^{\mathrm{tot}}=p_2,
+  \qquad
+  \frac{1}{\rho_1}\partial_n p_1^{\mathrm{tot}}
+  =\frac{1}{\rho_2}\partial_n p_2
+  \qquad\text{on }\Gamma_a.
+\]</span></p>
+<p>For a spherical shell, both independent radial solutions are
+admissible because the layer does not include the origin. An
+axisymmetric shell field can be expanded as:</p>
+<p><span class="math display">\[
+  p_2(r,\theta)
+  =\sum_{m=0}^{\infty}
+  \left[
+    B_m\,j_m(k_2r)+C_m\,y_m(k_2r)
+  \right]P_m(\cos\theta),
+  \qquad b&lt;r&lt;a.
+\]</span></p>
+<p>Here, <span class="math inline">\(j_m\)</span> and <span class="math inline">\(y_m\)</span> are spherical Bessel functions of the
+first and second kinds. The singularity of <span class="math inline">\(y_m(k_2r)\)</span> at the origin is irrelevant
+because <span class="math inline">\(r=0\)</span> is outside the shell
+layer. The condition at <span class="math inline">\(\Gamma_b\)</span>
+determines the relative weights of these two branches.</p>
+<div id="pressure-release-interior" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> Pressure release
+interior</h2>
+<p>For a pressure-release core, the shell pressure vanishes at the inner
+interface:</p>
+<p><span class="math display">\[
+  p_2=0
+  \qquad\text{on }\Gamma_b.
+\]</span></p>
+<p>In a spherical modal solution, a radial combination that satisfies
+this inner condition identically is:</p>
+<p><span class="math display">\[
+  R_m^{\mathrm{pr}}(r)
+  =j_m(k_2r)y_m(k_2b)-y_m(k_2r)j_m(k_2b).
+\]</span></p>
+<p>Its value at the inner radius is:</p>
+<p><span class="math display">\[
+  R_m^{\mathrm{pr}}(b)=0.
+\]</span></p>
+<p>The outer pressure and velocity conditions then couple this
+admissible shell field to <span class="math inline">\(p_1^{\mathrm{tot}}\)</span>. The shell can carry
+normal acoustic motion even though the pressure is zero at its inner
+boundary. Its finite thickness and wavenumber add propagation phase
+between the two interfaces. The resulting response can contain
+cavity-like resonances that are absent from a single pressure-release
+surface.</p>
+</div>
+<div id="fluid-filled-interior" class="section level2" number="4.2">
+<h2><span class="header-section-number">4.2</span> Fluid-filled
+interior</h2>
+<p>If medium <code>3</code> is a fluid or gas core, it supports its own
+Helmholtz field:</p>
+<p><span class="math display">\[
+  \nabla^2p_3+k_3^2p_3=0
+  \qquad\text{inside }\Gamma_b.
+\]</span></p>
+<p>Pressure and normal velocity are continuous at the inner
+interface:</p>
+<p><span class="math display">\[
+  p_2=p_3,
+  \qquad
+  \frac{1}{\rho_2}\partial_n p_2
+  =\frac{1}{\rho_3}\partial_n p_3
+  \qquad\text{on }\Gamma_b.
+\]</span></p>
+<p>For a spherical core containing the origin, regularity excludes the
+spherical Bessel function of the second kind. The core expansion is
+therefore:</p>
+<p><span class="math display">\[
+  p_3(r,\theta)
+  =\sum_{m=0}^{\infty}D_m\,j_m(k_3r)P_m(\cos\theta),
+  \qquad 0\leq r&lt;b.
+\]</span></p>
+<p>Together, the two conditions at <span class="math inline">\(\Gamma_a\)</span> and the two at <span class="math inline">\(\Gamma_b\)</span> determine the exterior
+scattering field, the two shell branches, and the regular core field for
+each mode. The shell is not assigned infinite impedance, and its normal
+velocity is not set to zero. Resonance and interference arise from
+compressional propagation through the shell and core rather than from
+elastic shear or bending waves.</p>
+</div>
+</div>
+<div id="elastic-shelled-boundaries" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> Elastic shelled
+boundaries</h1>
+<div id="elastic-shell-boundary" class="section level2" number="5.1">
+<h2><span class="header-section-number">5.1</span> Elastic shell
+boundary</h2>
+<p>An elastic shell supports longitudinal and transverse motion. Its
+displacement <span class="math inline">\(\mathbf{u}(\mathbf{x},t)\)</span> follows from
+balance of linear momentum and Hooke’s law. For a homogeneous isotropic
+shell, the time-domain Navier equation is <span class="citation">(<a href="#ref-Achenbach_1973">Achenbach 1973</a>)</span>:</p>
+<p><span class="math display">\[
+  (\lambda+2\mu)\nabla(\nabla\mathbin{\cdot}\mathbf{u})
+  -\mu\nabla\mathbin{\times}(\nabla\mathbin{\times}\mathbf{u})
+  -\rho_s\frac{\partial^2\mathbf{u}}{\partial t^2}
+  =0.
+\]</span></p>
+<p>For a displacement phasor with <span class="math inline">\(e^{-i\omega t}\)</span> dependence, this
+becomes:</p>
+<p><span class="math display">\[
+  (\lambda+2\mu)\nabla(\nabla\mathbin{\cdot}\mathbf{u})
+  -\mu\nabla\mathbin{\times}(\nabla\mathbin{\times}\mathbf{u})
+  +\rho_s\omega^2\mathbf{u}
+  =0.
+\]</span></p>
+<p>The Helmholtz decomposition separates dilatational and equivoluminal
+motion:</p>
+<p><span class="math display">\[
+  \mathbf{u}=\nabla\Phi+\nabla\mathbin{\times}\mathbf{\Psi},
+  \qquad
+  \nabla\mathbin{\cdot}\mathbf{\Psi}=0.
+\]</span></p>
+<p>The scalar and vector potentials satisfy separate Helmholtz
+equations:</p>
+<p><span class="math display">\[
+  \nabla^2\Phi+k_L^2\Phi=0,
+  \qquad
+  \nabla^2\mathbf{\Psi}+k_T^2\mathbf{\Psi}=0.
+\]</span></p>
+<p>Their wavenumbers and wave speeds are:</p>
+<p><span class="math display">\[
+  k_L=\frac{\omega}{c_L},
+  \qquad
+  k_T=\frac{\omega}{c_T},
+  \qquad
+  c_L=\sqrt{\frac{\lambda+2\mu}{\rho_s}},
+  \qquad
+  c_T=\sqrt{\frac{\mu}{\rho_s}}.
+\]</span></p>
+<p>The infinitesimal strain and Cauchy stress tensors are:</p>
+<p><span class="math display">\[
+  \boldsymbol{\varepsilon}
+  =\frac{1}{2}\left[
+    \nabla\mathbf{u}+(\nabla\mathbf{u})^{\mathsf T}
+  \right],
+  \qquad
+  \boldsymbol{\sigma}
+  =\lambda(\nabla\mathbin{\cdot}\mathbf{u})\mathbf{I}
+  +2\mu\boldsymbol{\varepsilon}.
+\]</span></p>
+<p>At either fluid-solid interface, let <span class="math inline">\(\mathbf{n}_s\)</span> point from the solid shell
+into the adjacent fluid. The fluid stress is <span class="math inline">\(\boldsymbol{\sigma}_f=-p_f\mathbf{I}\)</span>.
+Continuity of traction is then the vector condition:</p>
+<p><span class="math display">\[
+  \boldsymbol{\sigma}\mathbf{n}_s
+  =-p_f\mathbf{n}_s.
+\]</span></p>
+<p>Separating that relation into normal and tangential parts gives:</p>
+<p><span class="math display">\[
+  \mathbf{n}_s\mathbin{\cdot}
+  \boldsymbol{\sigma}\mathbf{n}_s=-p_f,
+  \qquad
+  (\mathbf{I}-\mathbf{n}_s\mathbf{n}_s^{\mathsf T})
+  \boldsymbol{\sigma}\mathbf{n}_s=\mathbf{0}.
+\]</span></p>
+<p>The second condition states that an inviscid fluid applies no
+tangential traction. It does not require the tangential solid
+displacement to vanish. Continuity of normal velocity supplies the
+remaining kinematic condition:</p>
+<p><span class="math display">\[
+  \mathbf{v}_f\mathbin{\cdot}\mathbf{n}_s
+  =-i\omega\mathbf{u}\mathbin{\cdot}\mathbf{n}_s.
+\]</span></p>
+<p>Written in terms of fluid pressure, the same condition is:</p>
+<p><span class="math display">\[
+  \frac{1}{i\omega\rho_f}\partial_{n_s}p_f
+  =-i\omega u_n,
+  \qquad
+  u_n=\mathbf{u}\mathbin{\cdot}\mathbf{n}_s.
+\]</span></p>
+<p>At the outer shell surface, <span class="math inline">\(p_f=p_1^{\mathrm{tot}}\)</span>. At the inner
+surface, <span class="math inline">\(p_f=p_3\)</span>. The normal <span class="math inline">\(\mathbf{n}_s\)</span> points radially outward at
+<span class="math inline">\(r=a\)</span> and radially inward at <span class="math inline">\(r=b\)</span>. Stating the normal this way removes
+any ambiguity in the pressure-traction sign.</p>
+<p>For a solid elastic target with no core, these conditions are imposed
+only at the exterior surface. Regularity at the origin excludes singular
+longitudinal and transverse radial solutions. The resulting fluid-solid
+coupling is the starting point for classical elastic-sphere and
+elastic-cylinder scattering theory <span class="citation">(<a href="#ref-Faran_1951">Faran 1951</a>)</span>.</p>
+<p>For an axisymmetric shell, normal traction, normal velocity, and one
+tangential traction condition are imposed at each radius. These six
+scalar conditions couple the exterior acoustic field, both elastic
+potentials in the shell, and the interior acoustic field <span class="citation">(<a href="#ref-Goodman_1962">Goodman and Stern
+1962</a>)</span>. They admit resonances governed by shell thickness,
+density, longitudinal and transverse wave speeds, and fluid loading.
+This is the essential distinction from an acoustic shell, which has no
+transverse potential and cannot support shear or bending motion <span class="citation">(<a href="#ref-Stanton_1990">Stanton
+1990</a>)</span>.</p>
+</div>
+</div>
+<div id="viscous-interfaces" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Viscous interfaces</h1>
+<p>A compressible Newtonian viscous fluid supports deviatoric stress as
+well as pressure. If <span class="math inline">\(\eta\)</span> is the
+shear viscosity, <span class="math inline">\(\zeta\)</span> is the bulk
+viscosity, and <span class="math inline">\(\mathbf{D}\)</span> is the
+rate-of-deformation tensor, its Cauchy stress is <span class="citation">(<a href="#ref-Pierce_1989">Pierce
+1989</a>)</span>:</p>
+<p><span class="math display">\[
+  \boldsymbol{\sigma}_v
+  =-p_v\mathbf{I}
+  +2\eta\mathbf{D}
+  +\left(\zeta-\frac{2}{3}\eta\right)
+  (\nabla\mathbin{\cdot}\mathbf{v}_v)\mathbf{I}.
+\]</span></p>
+<p>The rate-of-deformation tensor is:</p>
+<p><span class="math display">\[
+  \mathbf{D}
+  =\frac{1}{2}\left[
+    \nabla\mathbf{v}_v+(\nabla\mathbf{v}_v)^{\mathsf T}
+  \right].
+\]</span></p>
+<p>At an interface with an inviscid acoustic fluid, let <span class="math inline">\(\mathbf{n}\)</span> point from the viscous medium
+into the inviscid fluid. Normal traction and normal velocity are
+continuous:</p>
+<p><span class="math display">\[
+  \mathbf{n}\mathbin{\cdot}\boldsymbol{\sigma}_v\mathbf{n}
+  =-p_f,
+  \qquad
+  \mathbf{v}_v\mathbin{\cdot}\mathbf{n}
+  =\mathbf{v}_f\mathbin{\cdot}\mathbf{n}.
+\]</span></p>
+<p>Because the inviscid fluid cannot apply shear traction, the
+tangential traction on the viscous side vanishes:</p>
+<p><span class="math display">\[
+  (\mathbf{I}-\mathbf{n}\mathbf{n}^{\mathsf T})
+  \boldsymbol{\sigma}_v\mathbf{n}=\mathbf{0}.
+\]</span></p>
+<p>At a bonded viscous-fluid and elastic-solid interface, both velocity
+and traction are continuous. With <span class="math inline">\(\mathbf{n}\)</span> used consistently on both
+sides, the phasor conditions are:</p>
+<p><span class="math display">\[
+  \mathbf{v}_v=-i\omega\mathbf{u}_s,
+  \qquad
+  \boldsymbol{\sigma}_v\mathbf{n}
+  =\boldsymbol{\sigma}_s\mathbf{n}.
+\]</span></p>
+<p>These vector conditions couple normal and tangential motion. Viscous
+compressional and shear branches are generally attenuating, so the
+interface can broaden and damp resonances that would be sharper in a
+lossless elastic shell <span class="citation">(<a href="#ref-Feuillade_1998">Feuillade and Nero 1998</a>)</span>.</p>
+</div>
+<div id="circumferential-waves-and-resonance-families" class="section level1" number="7">
+<h1><span class="header-section-number">7</span> Circumferential waves
+and resonance families</h1>
+<p>Boundary conditions do not introduce circumferential waves as
+separate terms. Instead, they determine which wave families the complete
+field solution can support and how those waves couple to the exterior
+fluid. Geometry, frequency, material properties, and attenuation then
+control their phase, propagation distance, and resonance structure <span class="citation">(<a href="#ref-Uberall_1973">Überall
+1973</a>)</span>.</p>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phenomenon</th>
+<th>Boundary setting</th>
+<th>Physical interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Franz or creeping waves</td>
+<td>Smooth convex rigid or pressure-release boundaries</td>
+<td>Exterior diffracted waves that follow the surface into the
+geometrical shadow while continually radiating into the surrounding
+fluid.</td>
+</tr>
+<tr class="even">
+<td>Rayleigh-type waves</td>
+<td>Fluid-loaded elastic solids and sufficiently thick elastic
+shells</td>
+<td>Surface-localized elastic motion formed from coupled longitudinal
+and transverse fields.</td>
+</tr>
+<tr class="odd">
+<td>Lamb-type waves</td>
+<td>Thin or moderately thin elastic shells</td>
+<td>Dispersive guided shell waves whose motion depends on the conditions
+at both shell surfaces.</td>
+</tr>
+<tr class="even">
+<td>Whispering-gallery waves</td>
+<td>Penetrable fluid or elastic targets</td>
+<td>High-order internal or surface-guided waves retained near the
+boundary by repeated refraction or reflection.</td>
+</tr>
+<tr class="odd">
+<td>Glory</td>
+<td>Spherical or nearly axisymmetric targets</td>
+<td>A directional enhancement produced when circumferential
+contributions converge coherently near a symmetry direction. It is an
+interference or focusing effect, not a separate wave family.</td>
+</tr>
+</tbody>
+</table>
+<p>These labels describe identifiable contributions within an exact
+modal solution. They are not additional boundary conditions. For
+example, the longitudinal and transverse potentials of an elastic target
+already contain its surface and guided-wave contributions once the
+traction and velocity conditions have been enforced. Separating those
+contributions generally requires modal phase, resonance-pole,
+time-domain, or asymptotic analysis. Surface-elastic-wave
+interpretations of elastic-sphere and elastic-cylinder backscatter
+provide a classical example <span class="citation">(<a href="#ref-Marston_1988">Marston 1988</a>)</span>.</p>
+</div>
+<div id="weak-fluid-like" class="section level1" number="8">
+<h1><span class="header-section-number">8</span> Weak, fluid-like</h1>
+<p>Weak fluid-like scattering is an approximation regime, not a
+replacement for the fluid-fluid transmission conditions. For spatially
+varying density and compressibility, the source-free pressure equation
+can be written as:</p>
+<p><span class="math display">\[
+  \nabla\mathbin{\cdot}
+  \left(\frac{1}{\rho}\nabla p\right)
+  +\omega^2\kappa p=0,
+  \qquad
+  \kappa=\frac{1}{\rho c^2}.
+\]</span></p>
+<p>When medium <code>2</code> differs only slightly from medium
+<code>1</code>, its total internal field may be replaced at first order
+by the incident field:</p>
+<p><span class="math display">\[
+  p_2(\mathbf{x})\approx p_1^{\mathrm{inc}}(\mathbf{x}).
+\]</span></p>
+<p>The density and sound-speed ratios must remain close to unity:</p>
+<p><span class="math display">\[
+  g_{21}=\frac{\rho_2}{\rho_1}\approx1,
+  \qquad
+  h_{21}=\frac{c_2}{c_1}\approx1.
+\]</span></p>
+<p>The corresponding density and compressibility perturbations are:</p>
+<p><span class="math display">\[
+  \gamma_\rho
+  =\frac{\rho_2-\rho_1}{\rho_2}
+  =1-\frac{1}{g_{21}},
+  \qquad
+  \gamma_\kappa
+  =\frac{\kappa_2-\kappa_1}{\kappa_1}
+  =\frac{1}{g_{21}h_{21}^2}-1.
+\]</span></p>
+<p>The weak-contrast assumption requires:</p>
+<p><span class="math display">\[
+  |\gamma_\rho|\ll1,
+  \qquad
+  |\gamma_\kappa|\ll1.
+\]</span></p>
+<p>The scattered field is then the first-order response to the residual
+density and compressibility contrasts <span class="citation">(<a href="#ref-Chu_1999">Chu and Ye 1999</a>)</span>. Strong impedance
+jumps, internal multiple scattering, and resonant behavior violate this
+approximation even though the exact fluid-fluid boundary conditions
+remain valid.</p>
+</div>
+<div id="bibliography" class="section level1 unnumbered">
+<h1 class="unnumbered">References</h1>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-Achenbach_1973" class="csl-entry">
+Achenbach, J. D. 1973. <em>Wave Propagation in Elastic Solids</em>.
+North-<span>Holland</span> Series in Applied Mathematics and Mechanics,
+v. 16. North-Holland Pub. Co. American Elsevier Pub. Co.
+</div>
+<div id="ref-Anderson_1950" class="csl-entry">
+Anderson, Victor C. 1950. <span>“Sound Scattering from a Fluid
+Sphere.”</span> <em>The Journal of the Acoustical Society of
+America</em> 22 (4): 426–31. <a href="https://doi.org/10.1121/1.1906621">https://doi.org/10.1121/1.1906621</a>.
+</div>
+<div id="ref-Chu_1999" class="csl-entry">
+Chu, Dezhang, and Zhen Ye. 1999. <span>“A Phase-Compensated Distorted
+Wave <span>Born</span> Approximation Representation of the Bistatic
+Scattering by Weakly Scattering Objects: <span>Application</span> to
+Zooplankton.”</span> <em>The Journal of the Acoustical Society of
+America</em> 106 (4): 1732–43. <a href="https://doi.org/10.1121/1.428036">https://doi.org/10.1121/1.428036</a>.
+</div>
+<div id="ref-Colton_2013" class="csl-entry">
+Colton, David, and Rainer Kress. 2013. <em>Inverse Acoustic and
+Electromagnetic Scattering Theory</em>. 3rd ed. Vol. 93. Springer. <a href="https://doi.org/10.1007/978-1-4614-4942-3">https://doi.org/10.1007/978-1-4614-4942-3</a>.
+</div>
+<div id="ref-Faran_1951" class="csl-entry">
+Faran, James J. 1951. <span>“Sound Scattering by Solid Cylinders and
+Spheres.”</span> <em>The Journal of the Acoustical Society of
+America</em> 23 (4): 405–18. <a href="https://doi.org/10.1121/1.1906780">https://doi.org/10.1121/1.1906780</a>.
+</div>
+<div id="ref-Feuillade_1998" class="csl-entry">
+Feuillade, C., and R. W. Nero. 1998. <span>“A Viscous-Elastic
+Swimbladder Model for Describing Enhanced-Frequency Resonance Scattering
+from Fish.”</span> <em>The Journal of the Acoustical Society of
+America</em> 103 (6): 3245–55. <a href="https://doi.org/10.1121/1.423076">https://doi.org/10.1121/1.423076</a>.
+</div>
+<div id="ref-Goodman_1962" class="csl-entry">
+Goodman, Ralph R., and Raya Stern. 1962. <span>“Reflection and
+Transmission of Sound by Elastic Spherical Shells.”</span> <em>The
+Journal of the Acoustical Society of America</em> 34 (3): 338–44. <a href="https://doi.org/10.1121/1.1928120">https://doi.org/10.1121/1.1928120</a>.
+</div>
+<div id="ref-Marston_1988" class="csl-entry">
+Marston, Philip L. 1988. <span>“GTD for Backscattering from Elastic
+Spheres and Cylinders in Water and the Coupling of Surface Elastic Waves
+with the Acoustic Field.”</span> <em>The Journal of the Acoustical
+Society of America</em> 83 (1): 25–37. <a href="https://doi.org/10.1121/1.396428">https://doi.org/10.1121/1.396428</a>.
+</div>
+<div id="ref-Medwin_1998" class="csl-entry">
+Medwin, Herman, and Clarence S. Clay. 1998. <em>Fundamentals of
+Acoustical Oceanography</em>. Applications of Modern Acoustics. Academic
+Press.
+</div>
+<div id="ref-Morse_1968" class="csl-entry">
+Morse, Philip M., and K. Uno Ingard. 1968. <em>Theoretical
+Acoustics</em>. McGraw-Hill.
+</div>
+<div id="ref-Pierce_1989" class="csl-entry">
+Pierce, Allan D. 1989. <em>Acoustics: An Introduction to Its Physical
+Principles and Applications</em>. Acoustical Society of America.
+</div>
+<div id="ref-Stanton_1990" class="csl-entry">
+Stanton, T. K. 1990. <span>“Sound Scattering by Spherical and Elongated
+Shelled Bodies.”</span> <em>The Journal of the Acoustical Society of
+America</em> 88 (3): 1619–33. <a href="https://doi.org/10.1121/1.400321">https://doi.org/10.1121/1.400321</a>.
+</div>
+<div id="ref-Uberall_1973" class="csl-entry">
+Überall, Herbert. 1973. <span>“Surface Waves in Acoustics.”</span> In
+<em>Physical Acoustics</em>, edited by Warren P. Mason and R. N.
+Thurston, vol. 10. Academic Press.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

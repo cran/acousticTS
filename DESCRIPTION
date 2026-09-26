@@ -1,0 +1,70 @@
+Package: acousticTS
+Title: Physics-Based Models for Acoustic Target Strength
+Version: 2.0.6
+Authors@R: c(
+    person("Brandyn", "Lucca", , "brandyn.lucca@gmail.com", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0003-3145-2969")),
+    person("Arnie Lee", "Van Buren", role = c("ctb", "cph"),
+           comment = paste("Author and copyright holder of upstream prolate_swf",
+                           "code adapted for this package")),
+    person("Jeffrey E.", "Boisvert", role = "ctb",
+           comment = "Coauthor of upstream prolate_swf code adapted for this package")
+    )
+Copyright: See file inst/COPYRIGHTS.
+Description: Acoustic target strength (TS) represents the intensity of an
+    echo returning from an individual scatterer such as bubbles, fish, or
+    zooplankton. TS can be used to convert integrated or volumetric
+    backscatter collected from fisheries acoustic surveys into units of
+    number density (e.g. animals per m^3), abundance (e.g. number of
+    animals), and biomass (e.g. kg). This parameter can also be used to
+    aid in classifying backscatter, such as separating likely echoes of
+    large predatory fish (e.g. adult cod) from smaller prey (e.g. shrimp).
+    One way to estimate TS is to use physics-based models to calculate
+    theoretical TS that comprise exact and approximate solutions as well
+    as analytical approaches. The models provided can help provide TS
+    estimates over broad statistical distributions of model parameters.
+    Applications are described by Lucca et al. (2023)
+    <doi:10.1121/10.0022459>, with fisheries-acoustics principles from
+    Simmonds and MacLennan (2005) <doi:10.1002/9780470995303>.
+License: GPL-3
+URL: https://brandynlucca.github.io/acousticTS/,
+        https://doi.org/10.5281/zenodo.7600659
+BugReports: https://github.com/brandynlucca/acousticTS/issues
+Depends: R (>= 4.0.0)
+Imports: grDevices, graphics, methods, parallel, pbapply, Rcpp, stats,
+        tools, utils
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
+LinkingTo: BH, Rcpp, RcppArmadillo
+VignetteBuilder: knitr, rmarkdown
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+Collate: 'RcppExports.R' 'acoustics.R' 'bessel-cylindrical.R'
+        'bessel-spherical.R' 'constants.R' 'utilities-scatterer.R'
+        'create_scatterer.R' 'create_shape.R' 'data.R' 'harmonics.R'
+        'math.R' 'models.R' 'model-bcms.R' 'model-bbfm.R'
+        'model-dwba.R' 'model-pcdwba.R' 'model-ecms.R' 'model-essms.R'
+        'model-vesms.R' 'model-fcms.R' 'model-hpa.R' 'model-krm.R'
+        'model-psms.R' 'model-tmm-helpers.R' 'model-tmm-spherical.R'
+        'model-tmm-spheroidal.R' 'model-tmm.R' 'tmm-scattering.R'
+        'tmm-orientation.R' 'tmm-diagnostics.R' 'tmm-bistatic.R'
+        'tmm-plotting.R' 'model-sdwba.R' 'model-soems.R'
+        'model-sphms.R' 'model-trcm.R' 'validation-registry.R'
+        'pkgdown-helpers.R' 'scatterer.R' 'scatterer_plot.R'
+        'scatterer_reforge.R' 'shapes.R' 'show.R' 'simulation.R'
+        'spheroidal.R' 'utilities.R' 'utilities-init.R'
+        'utilities-modal.R' 'utilities-plotting.R'
+        'utilities-geometry.R' 'shape_manipulation.R'
+        'canonicalize_shape.R' 'validation.R'
+Config/roxygen2/version: 8.1.0
+NeedsCompilation: yes
+Packaged: 2026-09-15 19:00:48 UTC; Brandyn
+Author: Brandyn Lucca [aut, cre, cph] (ORCID:
+    <https://orcid.org/0000-0003-3145-2969>),
+  Arnie Lee Van Buren [ctb, cph] (Author and copyright holder of upstream
+    prolate_swf code adapted for this package),
+  Jeffrey E. Boisvert [ctb] (Coauthor of upstream prolate_swf code
+    adapted for this package)
+Maintainer: Brandyn Lucca <brandyn.lucca@gmail.com>
+Repository: CRAN
+Date/Publication: 2026-09-26 17:00:34 UTC

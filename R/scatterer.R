@@ -1,0 +1,374 @@
+################################################################################
+################################################################################
+# OVERALL SCATTERING OBJECTS
+################################################################################
+################################################################################
+#' Scatterer-class object for target strength estimation
+#'
+#' @description
+#' The \code{acousticTS} package uses a variety of defined S4-class objects
+#' comprising different types of scatterers, such as fish with gas-filled
+#' swimbladders (\link{SBF}) and fluid-like crustaceans
+#' (\link{FLS}).
+#' @slot metadata List containing relevant metadata
+#' @slot model_parameters Model parameters necessary for predicting TS
+#' @section Data Organization:
+#' \describe{
+#'    \item{\code{metadata}:}{A \code{list} comprising any identifying
+#'    information associated with the scatterer. The default metadata entry
+#'    includes \code{ID} that uses a default \code{character} value of
+#'    \code{"UID"} (i.e. \code{ID = "UID"}). This can otherwise be formatted
+#'    in any manner for book keeping purposes.}
+#'    \item{\code{body/bladder}:}{A \code{list} that includes information
+#'    relevant to the scatterer's position vector, material properties,
+#'    tilt/orientation, etc. For some scatterers, this may only include
+#'    \code{body}, but other targets may have an additional parameter such as
+#'    \code{bladder}. Generally, each entry includes:
+#'    \itemize{
+#'    \item{rpos}: the relevant position vector
+#'    (\ifelse{html}{\out{r<sub>0</sub>}}{\eqn{r_{0}}})
+#'    that includes axes such as \code{x}, \code{y}, \code{z}, etc., that depend
+#'    on the type of scatterer being used.
+#'    \item{\code{radius}:} in some cases this includes the radius measurements
+#'    for each cylinders depending on the type of scatterer object.
+#'    \item{\code{theta}:} the orientation of the scatterer relative to the
+#'    transmitting transducer or sound source
+#'    (\ifelse{html}{\out{&theta;<sub>animal</sub>}}{\eqn{\theta_{animal}}})
+#'    that can be represented either by degrees or radians, although all
+#'    functions require radians.
+#'    \item{\code{g, h}:} material properties that represent the density and
+#'    sound speed contrasts (g and h, respectively) relative to the
+#'    ambient/surrounding fluid. Some targets may instead have standard
+#'    sound speed
+#'    (\ifelse{html}{\out{c<sub>animal</sub>}}{\eqn{c_{animal}}},
+#'    m \ifelse{html}{\out{s<sup>-1</sup>}}{\eqn{s^{-1}}})
+#'    and density
+#'    (\ifelse{html}{\out{&rho;<sub>animal</sub>}}{\eqn{\rho_{animal}}},
+#'    kg \ifelse{html}{\out{m<sup>3</sup>}}{\eqn{m^3}}).
+#'    }
+#'    }
+#'    \item{\code{shape_parameters}:}{A \code{list} that includes metadata
+#'    pertaining to the shape of the scatterer and any other features of
+#'    interest (e.g. gas-filled swimbladder). Generally, each entry includes:
+#'    overall body length, the number of discrete cylinders that make up the
+#'    shape (if applicable), and the units related to both
+#'    \ifelse{html}{\out{&theta;<sub>animal</sub>}}{\eqn{\theta_{animal}}}
+#'    (e.g. rad, \ifelse{html}{\out{&deg;}}{\eqn{^\circ}}) and length
+#'    (e.g. mm, m).}
+#'    \item{\code{model_parameters}:}{A \code{list} that contains relevant model
+#'    parameterization once an object has been initialized for modeling
+#'    \ifelse{html}{\out{&sigma;<sub>bs</sub>}}{\eqn{\sigma_{bs}}}. This is
+#'    typically broken up into three categories:
+#'    \itemize{
+#'    \item{\code{parameters}:} A \code{list} that includes information such as
+#'    frequency (Hz), acoustic wavenumber (i.e. k), etc.
+#'    \item{\code{medium}:} A \code{data.frame} including information such as
+#'    the material properties of the ambient medium.
+#'    \item{\code{scatterer}:} A \code{list} containing summarized information
+#'    used to parameterize certain scattering models.}}
+#'    \item{\code{model}:}{A \code{list} that collects model results from one
+#'    or more models in the linear domain (i.e.
+#'    \ifelse{html}{\out{&sigma;<sub>bs</sub>}}{\eqn{\sigma_{bs}}}).
+#'    }
+#'    }
+#' @section Supported Scatterers:
+#' \itemize{
+#'    \item \code{Elastic-based scatterers} (\link{ELA})
+#'    \item \code{Composite multi-component scatterers} (\link{CSC})
+#'    \item \code{Backboned fish} (\link{BBF})
+#'    \item \code{Calibration spheres} (\link{CAL})
+#'    \item \code{Elastic-shelled scatterers} (\link{ESS})
+#'    \item \code{Fluid-like scatterers} (\link{FLS})
+#'    \item \code{Gas-filled scatterers} (\link{GAS})
+#'    \item \code{Swimbladdered fish} (\link{SBF})
+#' }
+#'
+#' @keywords scatterer_type
+#'
+#' @return An object from the `Scatterer` S4 class hierarchy.
+#' @examples
+#' methods::getClass("Scatterer")
+#'
+#' @name Scatterer
+#' @aliases Scatterer-class
+#' @rdname Scatterer-class
+#' @exportClass Scatterer
+setClass("Scatterer",
+  slots = c(
+    metadata = "list",
+    model_parameters = "list"
+  )
+)
+################################################################################
+################################################################################
+# ELASTIC-BASED SCATTERERS
+################################################################################
+################################################################################
+#' Elastic-based scatterer (ELA) object/class.
+#' @description
+#' A shared parent S4 class for elastic-based scatterers. The \code{ELA}-class
+#' collects the slots common to solid elastic targets such as calibration
+#' spheres (\link{CAL}) and elastic-shelled targets (\link{ESS}), without
+#' implying a particular internal structure such as a shell or homogeneous
+#' elastic solid. See \link{Scatterer} for a more detailed description of the
+#' shared object organization.
+#'
+#' @seealso \link{Scatterer}, \link{CAL}, \link{ESS}
+#'
+#' @keywords scatterer_type
+#'
+#' @return An object of the `ELA` S4 class.
+#' @examples
+#' methods::getClass("ELA")
+#'
+#' @name ELA
+#' @aliases ELA-class
+#' @rdname ELA-class
+#' @exportClass ELA
+ELA <- setClass("ELA",
+  slots = c(
+    model = "list",
+    body = "list",
+    shape_parameters = "list"
+  ),
+  prototype = list(
+    model = list(),
+    body = list(),
+    shape_parameters = list()
+  ),
+  contains = "Scatterer"
+)
+################################################################################
+################################################################################
+# COMPOSITE MULTI-COMPONENT SCATTERERS
+################################################################################
+################################################################################
+#' Composite scatterer (CSC) object/class.
+#' @description
+#' A shared parent S4 class for composite scatterers that retain a primary body
+#' component together with one or more additional anatomically distinct
+#' sub-components. The \code{CSC}-class is intended to provide modular
+#' scaffolding for multi-component biological targets, such as
+#' swimbladder-bearing fish and swimbladder-less fish represented as flesh plus
+#' backbone. It stores the primary body, a general component list, the shared
+#' model output slot, and shape metadata without implying any one specific
+#' resonant or elastic inclusion type.
+#'
+#' @seealso \link{Scatterer}, \link{SBF}, \link{BBF}
+#'
+#' @keywords scatterer_type
+#'
+#' @return An object of the `CSC` S4 class.
+#' @examples
+#' methods::getClass("CSC")
+#'
+#' @name CSC
+#' @aliases CSC-class
+#' @rdname CSC-class
+#' @exportClass CSC
+CSC <- setClass("CSC",
+  slots = c(
+    model = "list",
+    body = "list",
+    shape_parameters = "list",
+    components = "list"
+  ),
+  contains = "Scatterer"
+)
+################################################################################
+################################################################################
+# GAS/FLUID-FILLED SCATTERERS
+################################################################################
+################################################################################
+#' Generic gas-filled scatterer (GAS) object/class.
+#' @description
+#' A S4 class that provides slots to contain relevant metadata for gas-bearing
+#' scatterers belonging to the GAS-class. This object can include simple
+#' gas-filled bubbles to other scatterers with gas occlusions, swimbladders,
+#' and other internal features, if applicable. The default behavior for this
+#' type of object is to only reference the gaseous/fluid feature with
+#' exceptions that are model-dependent. See \link{Scatterer} for a more
+#' detailed description on how this S4 object is organized.
+#'
+#' @seealso \code{\link{Scatterer}}
+#'
+#' @keywords scatterer_type
+#'
+#' @return An object of the `GAS` S4 class.
+#' @examples
+#' methods::getClass("GAS")
+#'
+#' @name GAS
+#' @aliases GAS-class
+#' @rdname GAS-class
+#' @exportClass GAS
+GAS <- setClass("GAS",
+  slots = c(
+    metadata = "list",
+    model_parameters = "list",
+    model = "list",
+    body = "list",
+    shape_parameters = "list"
+  ),
+  contains = "Scatterer"
+)
+################################################################################
+#' Swimbladdered fish (SBF) object/class.
+#' @description
+#' A S4 class that provides slots to contain relevant animal metadata for
+#' parameterizing models for swimbladdered fish (SBF) that are partitioned into
+#' two sets of discretized cylinders: the body and the swimbladder. Both shapes
+#' comprise independent position matrices, material properties, orientations,
+#' and other relevant shape-related data and metadata. See
+#' \link{Scatterer} for a more detailed description on how
+#' this S4 object is organized.
+#'
+#' @seealso \link{Scatterer}
+#'
+#' @keywords scatterer_type
+#'
+#' @return An object of the `SBF` S4 class.
+#' @examples
+#' methods::getClass("SBF")
+#'
+#' @name SBF
+#' @aliases SBF-class
+#' @rdname SBF-class
+#' @exportClass SBF
+SBF <- setClass("SBF",
+  slots = c(
+    metadata = "list",
+    model_parameters = "list",
+    model = "list",
+    body = "list",
+    bladder = "list",
+    shape_parameters = "list"
+  ),
+  contains = "GAS"
+)
+################################################################################
+#' Backboned fish (BBF) object/class.
+#' @description
+#' A S4 class that stores a fluid-like flesh component together with an explicit
+#' elastic backbone component for swimbladder-less fish applications where those
+#' two structures should remain separate. The body and backbone each retain
+#' their own geometry, orientations, and material properties. This class is
+#' intended to support composite flesh-plus-backbone model development and
+#' future extensions where additional internal structures may need to be carried
+#' alongside the body.
+#'
+#' @seealso \link{Scatterer}, \link{CSC}
+#'
+#' @keywords scatterer_type
+#'
+#' @return An object of the `BBF` S4 class.
+#' @examples
+#' methods::getClass("BBF")
+#'
+#' @name BBF
+#' @aliases BBF-class
+#' @rdname BBF-class
+#' @exportClass BBF
+BBF <- setClass("BBF",
+  slots = c(
+    backbone = "list"
+  ),
+  contains = "CSC"
+)
+################################################################################
+################################################################################
+# ELASTIC-SHELLED SCATTERERS
+################################################################################
+################################################################################
+#' Elastic shelled scatterer (ESS) object/class.
+#' @description
+#' A S4 class that provides slots to contain relevant metadata for elastic
+#' shelled scatterers/objects belonging to the ESS-class. This object can be
+#' created using values for both an outer shell and internal tissues, if
+#' applicable. The default behavior for this type of this object is to only
+#' reference the outer shell with few exceptions that are model-dependent.
+#' \code{ESS} inherits from the broader elastic-based \link{ELA} class. See
+#' \link{Scatterer} for a more detailed description on how this S4 object is
+#' organized.
+#'
+#' @seealso \link{Scatterer}
+#'
+#' @keywords scatterer_type
+#'
+#' @return An object of the `ESS` S4 class.
+#' @examples
+#' methods::getClass("ESS")
+#'
+#' @name ESS
+#' @aliases ESS-class
+#' @rdname ESS-class
+#' @exportClass ESS
+ESS <- setClass("ESS",
+  slots = c(
+    shell = "list",
+    fluid = "list"
+  ),
+  contains = "ELA"
+)
+################################################################################
+#' Solid and calibration sphere (CAL) object/class.
+#' @description
+#' A S4 class that provides slots to contain relevant metadata for solid sphere
+#' objects belonging to the CAL-class scatterers. This object is created using
+#' parameters specific to the outer shell. The default behavior of this object
+#' is to only reference these outer elastic shell properties with few
+#' exceptions that are model-dependent. \code{CAL} inherits from the broader
+#' elastic-based \link{ELA} class rather than from \link{ESS}, because
+#' calibration targets are solid elastic bodies rather than elastic shells. See
+#' \link{Scatterer} for a more detailed description on how this S4 object is
+#' organized.
+#'
+#' @seealso \link{Scatterer}
+#'
+#' @keywords scatterer_type
+#'
+#' @return An object of the `CAL` S4 class.
+#' @examples
+#' methods::getClass("CAL")
+#'
+#' @name CAL
+#' @aliases CAL-class
+#' @rdname CAL-class
+#' @exportClass CAL
+CAL <- setClass("CAL",
+  contains = "ELA"
+)
+################################################################################
+################################################################################
+# FLUID-LIKE SCATTERERS
+################################################################################
+################################################################################
+#' Fluid-like scatterer (FLS) object/class.
+#' @description
+#' A S4 class that provides slots to contain relevant metadata for scatterers
+#' similar to the surrounding fluid medium (i.e fluid-like) belonging to
+#' FLS-class scatterers. See \link{Scatterer} for a more
+#' detailed description on how this S4 object is organized.
+#'
+#' @seealso \link{Scatterer}
+#'
+#' @keywords scatterer_type
+#'
+#' @return An object of the `FLS` S4 class.
+#' @examples
+#' methods::getClass("FLS")
+#'
+#' @name FLS
+#' @aliases FLS-class
+#' @rdname FLS-class
+#' @exportClass FLS
+FLS <- setClass("FLS",
+  slots = c(
+    metadata = "list",
+    model_parameters = "list",
+    model = "list",
+    body = "list",
+    shape_parameters = "list"
+  ),
+  contains = "Scatterer"
+)
