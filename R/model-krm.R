@@ -116,7 +116,13 @@
 #'  }
 #'
 #' where \eqn{C_0} is a mode coefficient determined by the material properties
-#' and  boundary conditions of the swimbladder. For higher frequencies
+#' and boundary conditions of the swimbladder. In the far field,
+#' \eqn{\chi=-\pi/4}. The low-frequency branch evaluates the centered
+#' equivalent-cylinder expression in Clay (1992), Eq. (15), with the selected
+#' surrounding-medium wavenumber. Finite-length directivity is included in
+#' \eqn{\sin\Delta/\Delta}. This approximation uses the bladder volume and
+#' axial length and does not resolve its position or centerline bending.
+#' For higher frequencies
 #' \eqn{ka \ge 0.15}), the Kirchhoff-ray approximation is used:
 #'
 #' \deqn{
@@ -750,18 +756,8 @@ krm_initialize <- function(object,
     h13 = h13
   )
 
-  # Assemble the low-ka phase and sinc factors along the bladder length ========
-  dx_matrix <- matrix(
-    data = rep(bladder_geom$delta_x,
-      each = length(model$parameters$acoustics$k_sw)
-    ),
-    ncol = length(bladder_geom$delta_x),
-    nrow = length(model$parameters$acoustics$k_sw)
-  )
-  phase_low <- rowSums(
-    exp(2i * outer(k_bladder_low, bladder_geom$v_mid)) * dx_matrix,
-    na.rm = TRUE
-  ) / bladder_geom$length_eq
+  # Clay (1992), Eq. (15), for the centered equivalent cylinder.
+  # The single sinc already includes its finite-length angular response.
   Delta_low <- k_bladder_low * bladder_geom$length_eq * cos(bladder$theta)
   sinc_low <- rep(1, length(Delta_low))
   nz_delta <- abs(Delta_low) > sqrt(.Machine$double.eps)
@@ -769,7 +765,7 @@ krm_initialize <- function(object,
 
   # Return the low-ka swimbladder term and the regime mask =====================
   list(
-    f = -1i / pi * bladder_geom$length_eq * sinc_low * b0 * phase_low,
+    f = -1i / pi * bladder_geom$length_eq * sinc_low * b0,
     low_ka_mask = is.finite(ka_bladder_eq) & ka_bladder_eq <= 0.15
   )
 }

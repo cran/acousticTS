@@ -127,7 +127,13 @@ cylindrical mode (breathing mode):
  }
 
 where \eqn{C_0} is a mode coefficient determined by the material properties
-and  boundary conditions of the swimbladder. For higher frequencies
+and boundary conditions of the swimbladder. In the far field,
+\eqn{\chi=-\pi/4}. The low-frequency branch evaluates the centered
+equivalent-cylinder expression in Clay (1992), Eq. (15), with the selected
+surrounding-medium wavenumber. Finite-length directivity is included in
+\eqn{\sin\Delta/\Delta}. This approximation uses the bladder volume and
+axial length and does not resolve its position or centerline bending.
+For higher frequencies
 \eqn{ka \ge 0.15}), the Kirchhoff-ray approximation is used:
 
 \deqn{

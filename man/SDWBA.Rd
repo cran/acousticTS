@@ -94,23 +94,21 @@ over multiple stochastic realizations:
    \left| f_{bs}^{(m)}(\theta) \right|^2,
  }
 
-and the expected target strength, \eqn{\mathbb{E}[TS(\theta)]}, is computed
-from this mean.
+The reported \code{TS} is \eqn{10\log_{10}\langle\sigma_{bs}\rangle}
+in dB re 1 square metre.
 
-To ensure consistency across frequencies and body sizes, the SDWBA enforces
-scale invariance by preserving the product of the phase standard deviation,
-\eqn{\mathrm{sd}_\varphi}, and frequency, \eqn{f}:
+Above the minimum segment count, phase variability scales approximately as:
 
 \deqn{
    \mathrm{sd}_{\varphi}(f)\, f =
    \mathrm{sd}_{\varphi_0}\, f_0,
  }
 
-and by scaling the number of segments to maintain constant spatial
-resolution relative to acoustic wavelength:
+The segment count scales with frequency and length:
 
 \deqn{
-   N(f, L) = N_0 \frac{f L}{f_0 L_0}.
+   N(f, L) = \max\left(N_0, \left\lceil N_0
+   \frac{f L}{f_0 L_0}\right\rceil\right).
  }
 
 The phase standard deviation at arbitrary frequency and length is then:
@@ -121,18 +119,20 @@ The phase standard deviation at arbitrary frequency and length is then:
    \frac{N_0 L}{N(f, L) L_0}.
  }
 
-These scaling relationships ensure that stochastic decorrelation effects
-remain physically consistent across different acoustic and geometric regimes.
+Here \eqn{L} is the stored shape length, inferred from axial span for
+coordinate-only objects. Match its convention to \code{length_init}.
 }
 
 \section{Implementation}{
 
-The implementation extracts geometric and acoustic parameters from the input
-object, constructs the required rotation and wavenumber matrices, and
-evaluates the DWBA contribution for each segment. For each stochastic
-realization, random phase perturbations are applied, and the resulting
-backscattering amplitudes are averaged over all realizations to estimate the
-expected target strength.
+Independent random phases are applied to segment DWBA amplitudes.
+The resulting cross sections are averaged before conversion to TS.
+
+Resampling retains the breakpoint-aligned grid, spline centerline and
+stepwise cylinder radii. An unchanged interval count preserves the profile.
+
+\code{TS_sd} is the sample standard deviation of realization TS in dB.
+It is \code{NA} for fewer than two realizations or any non-finite TS.
 }
 
 \examples{
