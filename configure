@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# Configure the optional native binary128 backend.  It is usable only when the
+# Configure the optional binary128 backend. It is usable only when the
 # active Fortran compiler can compile the REAL(16) spheroidal implementation
-# and the active C++17 compiler can instantiate the matching complex type.
+# and the active C++17 toolchain can compile and link the matching complex type.
 
 set -eu
 
@@ -19,12 +19,19 @@ PKG_FFLAGS=${PKG_FFLAGS:-}
 CXX17=${CXX17:-$("$r_command" CMD config CXX17)}
 CXX17STD=${CXX17STD:-$("$r_command" CMD config CXX17STD)}
 CXX17FLAGS=${CXX17FLAGS:-$("$r_command" CMD config CXX17FLAGS)}
+CPPFLAGS=${CPPFLAGS-$("$r_command" CMD config CPPFLAGS)}
+LDFLAGS=${LDFLAGS-$("$r_command" CMD config LDFLAGS)}
+FLIBS=${FLIBS-$("$r_command" CMD config FLIBS)}
 
 quad_objects=
 quad_cppflags=-DACOUSTICTS_HAVE_QUADMATH=0
 fc_heap_flags=
 fc_prolate_flags=
 fc_diagnostic_flags=
+fc_runtime_libs=
+quad_include_flags=
+quad_runtime_libs=
+quad_libs=
 
 makevars_template=${ACOUSTICTS_MAKEVARS_TEMPLATE:-Makevars.in}
 makevars_output=${ACOUSTICTS_MAKEVARS_OUTPUT:-Makevars}
@@ -32,6 +39,7 @@ makevars_output=${ACOUSTICTS_MAKEVARS_OUTPUT:-Makevars}
 configure_tmp=$(mktemp -d "${TMPDIR:-/tmp}/acousticTS-configure.XXXXXX") || exit 1
 trap 'rm -rf "$configure_tmp"' EXIT HUP INT TERM
 
+cp "$srcdir/src/param.f90" "$configure_tmp/param.f90"
 cp "$srcdir/src/param_quad.f90" "$configure_tmp/param_quad.f90"
 cp "$srcdir/src/prolate_swf.f90" "$configure_tmp/prolate_swf.f90"
 
@@ -48,7 +56,7 @@ EOF
 # and, only when needed and supported, silence that driver-level diagnostic.
 printf '%s' 'checking whether the Fortran compiler needs unused-argument suppression... '
 if (
-    cd "$configure_tmp"
+    cd "$configure_tmp" &&
     eval "$FC $PKG_FFLAGS $FCFLAGS \
         -c conftest_heap.f90 -o conftest_diagnostic.o" \
         >diagnostic.log 2>&1 &&
@@ -60,7 +68,7 @@ if (
         -Qunused-arguments
     do
         if (
-            cd "$configure_tmp"
+            cd "$configure_tmp" &&
             eval "$FC $PKG_FFLAGS $FCFLAGS $candidate \
                 -c conftest_heap.f90 -o conftest_diagnostic.o" \
                 >diagnostic-suppressed.log 2>&1 &&
@@ -85,7 +93,7 @@ fi
 # the option instead of identifying compilers by name.
 printf '%s' 'checking whether the Fortran compiler supports heap arrays... '
 if (
-    cd "$configure_tmp"
+    cd "$configure_tmp" &&
     eval "$FC $PKG_FFLAGS $FCFLAGS -heap-arrays \
         -c conftest_heap.f90 -o conftest_heap.o" \
         >heap-arrays.log 2>&1
@@ -108,36 +116,126 @@ case "$fc_version" in
         ;;
 esac
 
+# Flang 21 moved the Fortran runtime into libflang_rt.runtime. Some R builds
+# still omit that library from FLIBS. Link the actual double-precision solver
+# because simple local allocations can bypass the Fortran runtime entirely.
+# https://releases.llvm.org/21.1.0/tools/flang/docs/FlangDriver.html#linker-driver
+cat > "$configure_tmp/conftest_runtime.cpp" <<'EOF'
+extern "C" void profcn_coefficients_cpp_interface(const double*, const int*,
+    const int*, const int*, const int*, double*, int*, int*);
+int main(int argc, char**) {
+    const double c = static_cast<double>(argc);
+    const int order = 0, orders = 1, degrees = 1, capacity = 64;
+    double coefficients[capacity] = {};
+    int length = 0, status = -1;
+    profcn_coefficients_cpp_interface(&c, &order, &orders, &degrees, &capacity,
+        coefficients, &length, &status);
+    return status;
+}
+EOF
+
+printf '%s' 'checking whether the C++ linker resolves the Fortran runtime... '
+if ! (
+    cd "$configure_tmp" &&
+    eval "$FC $PKG_FFLAGS $FCFLAGS $fc_diagnostic_flags $fc_heap_flags \
+        -cpp -c param.f90 -o param.o" >runtime.log 2>&1 &&
+    eval "$FC $PKG_FFLAGS $FCFLAGS $fc_diagnostic_flags $fc_heap_flags \
+        $fc_prolate_flags -cpp -c prolate_swf.f90 -o prolate_swf.o" >>runtime.log 2>&1
+); then
+    echo no
+    cat "$configure_tmp/runtime.log" >&2
+    echo 'configure: error: the double-precision Fortran solver cannot be compiled' >&2
+    exit 1
+fi
+if ! (
+    cd "$configure_tmp" &&
+    eval "$CXX17 $CXX17STD $CXX17FLAGS $LDFLAGS \
+        conftest_runtime.cpp param.o prolate_swf.o $FLIBS \
+        -o conftest_runtime" >>runtime.log 2>&1
+); then
+    fc_runtime_path=$(
+        eval "$FC -print-file-name=libflang_rt.runtime.a" 2>/dev/null || true
+    )
+    if ! test -f "$fc_runtime_path"; then
+        fc_runtime_path=$(
+            eval "$CXX17 $CXX17STD -print-file-name=libflang_rt.runtime.a" 2>/dev/null || true
+        )
+    fi
+    fc_runtime_candidate=-lflang_rt.runtime
+    if test -f "$fc_runtime_path"; then
+        fc_runtime_candidate="\"$fc_runtime_path\""
+    fi
+    if grep '_Fortran' "$configure_tmp/runtime.log" >/dev/null 2>&1 && (
+        cd "$configure_tmp" &&
+        eval "$CXX17 $CXX17STD $CXX17FLAGS $LDFLAGS \
+            conftest_runtime.cpp param.o prolate_swf.o $fc_runtime_candidate $FLIBS \
+            -o conftest_runtime" >>runtime.log 2>&1
+    ); then
+        fc_runtime_libs=$fc_runtime_candidate
+    else
+        echo no
+        cat "$configure_tmp/runtime.log" >&2
+        echo 'configure: error: the C++ linker cannot resolve the Fortran runtime' >&2
+        exit 1
+    fi
+fi
+echo "yes${fc_runtime_libs:+ ($fc_runtime_libs)}"
+
 cat > "$configure_tmp/conftest.cpp" <<'EOF'
 #include <quadmath.h>
 #include <complex>
 
-int main() {
+int main(int argc, char**) {
+    const __float128 argument = static_cast<__float128>(argc);
+    __float128 sine, cosine;
+    sincosq(argument, &sine, &cosine);
     std::complex<__float128> numerator(
-        static_cast<__float128>(1), static_cast<__float128>(2));
+        jnq(1, argument), sqrtq(argument));
     std::complex<__float128> denominator(
-        static_cast<__float128>(3), static_cast<__float128>(4));
+        cosine + powq(argument, static_cast<__float128>(2)), sine);
     const std::complex<__float128> result = numerator / denominator;
-    return result.real() == static_cast<__float128>(0);
+    return finiteq(result.real()) ? 0 : 1;
 }
 EOF
 
-printf '%s' 'checking for a compatible native binary128 C++/Fortran backend... '
+# Clang with libc++ can omit GCC's directory containing quadmath.h.
+# Search after standard headers to preserve the active compiler's headers.
+quad_header=$(gcc -print-file-name=include/quadmath.h 2>/dev/null || true)
+if test -f "$quad_header"; then
+    quad_include_flags="-idirafter \"$(dirname "$quad_header")\""
+fi
+
+# Flang 21 and later provide REAL(16) math in a separate runtime archive.
+quad_runtime_path=$(
+    eval "$CXX17 $CXX17STD -print-file-name=libflang_rt.quadmath.a" 2>/dev/null || true
+)
+if test -f "$quad_runtime_path"; then
+    quad_runtime_libs="\"$quad_runtime_path\""
+fi
+
+printf '%s' 'checking for a compatible binary128 C++/Fortran backend... '
 if test "${ACOUSTICTS_DISABLE_QUAD:-0}" != 1 && (
-    cd "$configure_tmp"
-    eval "$FC $PKG_FFLAGS $FCFLAGS $fc_heap_flags \
-        -cpp -c param_quad.f90 -o param_quad.o" >fortran.log 2>&1
-    eval "$FC $PKG_FFLAGS $FCFLAGS $fc_heap_flags $fc_prolate_flags \
+    cd "$configure_tmp" &&
+    eval "$FC $PKG_FFLAGS $FCFLAGS $fc_diagnostic_flags $fc_heap_flags \
+        -cpp -c param_quad.f90 -o param_quad.o" >fortran.log 2>&1 &&
+    eval "$FC $PKG_FFLAGS $FCFLAGS $fc_diagnostic_flags $fc_heap_flags $fc_prolate_flags \
         -cpp -DUSE_QUAD \
-        -c prolate_swf.f90 -o prolate_swf_quad.o" >>fortran.log 2>&1
-    eval "$CXX17 $CXX17STD $CXX17FLAGS -c conftest.cpp -o conftest.o" >cxx.log 2>&1
+        -c prolate_swf.f90 -o prolate_swf_quad.o" >>fortran.log 2>&1 &&
+    eval "$CXX17 $CXX17STD $CPPFLAGS $quad_include_flags $CXX17FLAGS \
+        -c conftest.cpp -o conftest.o" >cxx.log 2>&1 &&
+    # Link the actual quad objects with the same libraries used by the package.
+    eval "$CXX17 $CXX17STD $CXX17FLAGS $LDFLAGS conftest.o \
+        param_quad.o prolate_swf_quad.o $quad_runtime_libs $fc_runtime_libs \
+        $FLIBS -lquadmath -o conftest" >>cxx.log 2>&1
 ); then
     quad_objects='param_quad.o prolate_swf_quad.o'
-    quad_cppflags=-DACOUSTICTS_HAVE_QUADMATH=1
+    quad_cppflags="-DACOUSTICTS_HAVE_QUADMATH=1${quad_include_flags:+ $quad_include_flags}"
+    quad_libs=-lquadmath
     echo yes
 else
     echo no
-    echo '  native quad precision will be unavailable; the double backend will still be built'
+    quad_runtime_libs=
+    echo '  quad precision is unavailable in this build'
 fi
 
 sed \
@@ -146,6 +244,9 @@ sed \
     -e "s|@FC_HEAP_FLAGS@|$fc_heap_flags|g" \
     -e "s|@FC_PROLATE_FLAGS@|$fc_prolate_flags|g" \
     -e "s|@FC_DIAGNOSTIC_FLAGS@|$fc_diagnostic_flags|g" \
+    -e "s|@FC_RUNTIME_LIBS@|$fc_runtime_libs|g" \
+    -e "s|@QUAD_RUNTIME_LIBS@|$quad_runtime_libs|g" \
+    -e "s|@QUAD_LIBS@|$quad_libs|g" \
     "$srcdir/src/$makevars_template" > "$srcdir/src/$makevars_output"
 
 exit 0
